@@ -6,7 +6,7 @@ steps:
 - name: build
   image: golang:alpine
   commands:
-    - "go build -o ./main"
+    - "go build -o ./main" 
 
 - name: publish
   image: plugins/docker
