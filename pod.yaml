@@ -11,5 +11,5 @@ spec:
       image: bybys123/woof
       ports:
         - name: web
-          containerPort: 80
+            containerPort: 80
           protocol: TCPf
