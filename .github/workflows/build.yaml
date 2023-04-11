@@ -18,7 +18,7 @@ jobs:
         uses: tj-actions/changed-files@v35
         with:
           dir_names: true
-          files: "etc/terraform/**,cypress/**"
+          files: "etc/terraform/**"
 
   cypress:
     runs-on: ubuntu-latest
