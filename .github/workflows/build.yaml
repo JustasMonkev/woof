@@ -1,35 +1,44 @@
-name: Sveltefire Package
+name: Custom Workflow
 
-on:
-  push:
+on: [push, pull_request]
 
 jobs:
-  changed-files:
+  check_changes:
     runs-on: ubuntu-latest
     outputs:
-      any_non_terraform_changed: ${{ steps.changed-files.outputs.any_non_terraform_changed }}
+      only_terraform_changed: ${{ steps.evaluate_changes.outputs.only_terraform_changed }}
     steps:
       - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Get changed files
-        id: changed-files
+
+      - name: Check Terraform files changes
         uses: tj-actions/changed-files@v35
+        id: terraform_files
         with:
-          dir_names: true
-          files: "!etc/terraform/**"
+          files: "/etc/terraform"
 
-  cypress:
-    runs-on: ubuntu-latest
-    needs: changed-files
-    if: needs.changed-files.outputs.any_non_terraform_changed == 'true'
-    steps:
-      - uses: actions/checkout@v3
-      - run: echo "hello"
+      - name: Check all files changes
+        uses: tj-actions/changed-files@v35
+        id: all_files
+        with:
+          files: "**/*"
 
-  run-after:
+      - name: Evaluate changes
+        id: evaluate_changes
+        run: |
+          all_changed=${{ steps.terraform_files.outputs.all_changed }}
+          any_changed=${{ steps.all_files.outputs.any_changed }}
+          if [[ $all_changed == 'true' && $any_changed == 'false' ]]; then
+            echo "only_terraform_changed=true" >> $GITHUB_ENV
+          else
+            echo "only_terraform_changed=false" >> $GITHUB_ENV
+          fi
+
+  test_job:
+    needs: check_changes
+    if: needs.check_changes.outputs.only_terraform_changed == 'false'
     runs-on: ubuntu-latest
-    needs: cypress
     steps:
-      - uses: actions/checkout@v3
-      - run: echo "Hello222"
+      - name: Run tests
+        run: |
+          echo "Running tests..."
+          # Add the commands to run your tests here.
